@@ -5,7 +5,7 @@ namespace GameStore.Api.Endpoints;
 
 public static class GamesEndpoints
 {
-private static readonly List<GameDto> games = new List<GameDto>
+    private static readonly List<GameDto> games = new List<GameDto>
 {
     new GameDto(
         1,
@@ -32,55 +32,63 @@ private static readonly List<GameDto> games = new List<GameDto>
 
 
 
-    public static RouteGroupBuilder MapGamesEndpoints(this WebApplication app){
+    public static RouteGroupBuilder MapGamesEndpoints(this WebApplication app)
+    {
 
-        var group = app.MapGroup("/");
+        var group = app.MapGroup("/").WithParameterValidation();
 
         //GET /games
-group.MapGet("/", () => games);
+        group.MapGet("/", () => games);
 
-//GET /games/1
-group.MapGet("/{id}", (int id) => {
-    GameDto? game = games.Find(game => game.Id == id);
-    return game is null ? Results.NotFound() : Results.Ok(game);
-}).WithName("GetGame");
+        //GET /games/1
+        group.MapGet("/{id}", (int id) =>
+        {
+            GameDto? game = games.Find(game => game.Id == id);
+            return game is null ? Results.NotFound() : Results.Ok(game);
+        }).WithName("GetGame");
 
-//POST /games
-group.MapPost("/", (CreateGameDto newGame) => {
-    GameDto game = new(
-        games.Count + 1,
-        newGame.Name,
-        newGame.Genre,
-        newGame.Price,
-        newGame.ReleaseDate);
-    games.Add(game);
-    return Results.CreatedAtRoute("GetGame", new {id = game.Id}, game);
-});
+        //POST /games
+        group.MapPost("/", (CreateGameDto newGame) =>
+        {
+            
 
-//PUT /games
-group.MapPut("/{id}", (int id, UpdateGameDto updatedGame) => {
-    var index = games.FindIndex(game => game.Id == id);
+            GameDto game = new(
+                games.Count + 1,
+                newGame.Name,
+                newGame.Genre,
+                newGame.Price,
+                newGame.ReleaseDate);
+            games.Add(game);
+            return Results.CreatedAtRoute("GetGame", new { id = game.Id }, game);
+        }).WithParameterValidation();
 
-    if(index == -1){
-        return Results.NotFound();
-    }
+        //PUT /games
+        group.MapPut("/{id}", (int id, UpdateGameDto updatedGame) =>
+        {
+            var index = games.FindIndex(game => game.Id == id);
 
-    games[index] = new GameDto(
-        id,
-        updatedGame.Name,
-        updatedGame.Genre,
-        updatedGame.Price,
-        updatedGame.ReleaseDate
-    );
-    return Results.NoContent();
-});
+            if (index == -1)
+            {
+                return Results.NotFound();
+            }
 
-//DELETE /games/1
+            games[index] = new GameDto(
+                id,
+                updatedGame.Name,
+                updatedGame.Genre,
+                updatedGame.Price,
+                updatedGame.ReleaseDate
+            );
+            return Results.NoContent();
+        });
 
-group.MapDelete("/{id}",(int id) => {
-    games.RemoveAll(game => game.Id == id);
-    return Results.NoContent();
-});
-    return group;
+        //DELETE /games/1
+
+        group.MapDelete("/{id}", (int id) =>
+        {
+            games.RemoveAll(game => game.Id == id);
+            return Results.NoContent();
+        });
+        return group;
     }
 }
